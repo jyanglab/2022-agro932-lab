@@ -1,0 +1,18 @@
+---
+title: "Processing of maize phenotypic data"
+output: NULL
+---
+
+```{r}
+pheno <- read.csv("data/maize_pheno_282set_n37.csv")
+dim(pheno)
+
+```
+
+```{r}
+summary(pheno$DaystoSilk)
+```
+
+```{r}
+hist(pheno$DaystoSilk, main="Days to Silk", xlab="value")
+```
