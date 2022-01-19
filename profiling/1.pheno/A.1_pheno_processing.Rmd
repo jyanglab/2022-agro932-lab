@@ -1,12 +1,21 @@
 ---
 title: "Processing of maize phenotypic data"
+date: 01-19-2022
+author: "Jinliang Yang"
 output: NULL
 ---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//..//')) 
+#library(tidyverse)
+```
 
 ```{r}
 pheno <- read.csv("data/maize_pheno_282set_n37.csv")
 dim(pheno)
-
 ```
 
 ```{r}
@@ -16,3 +25,12 @@ summary(pheno$DaystoSilk)
 ```{r}
 hist(pheno$DaystoSilk, main="Days to Silk", xlab="value")
 ```
+
+
+
+```{r}
+pdf("graphs/daystosilk.pdf", width=5, height=5)
+hist(pheno$DaystoSilk, main="Days to Silk", xlab="value")
+dev.off()
+```
+

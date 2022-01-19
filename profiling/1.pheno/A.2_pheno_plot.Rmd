@@ -1,0 +1,58 @@
+---
+title: "Plot maize phenotypic data"
+date: 01-19-2022
+author: "Jinliang Yang"
+output: NULL
+---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//..//')) 
+#library(tidyverse)
+```
+
+```{r}
+pheno <- read.csv("data/maize_pheno_282set_n37.csv")
+dim(pheno)
+```
+
+
+```{r}
+
+library(ggplot2)
+library(tidyr)
+
+dt <- gather(pheno, key=trait, value=value, 2:38)
+
+# Change line colors by groups
+p1 <- ggplot(dt, aes(x=value, color=trait)) +
+  facet_wrap(vars(trait), scales = "free") +
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.3, bins=30)+
+  geom_density(alpha=0.3)+
+  #scale_color_manual(values=c("#E69F00", "#56B4E9", "#fe6f5e"))+
+  #scale_fill_manual(values=c("#E69F00", "#56B4E9", "#fe6f5e"), labels=c("HE", "HO", "Nip"))+
+  labs(title="", x="Trait value", y = "Density")+
+  guides(color=FALSE, fill=guide_legend(title="")) +
+  theme_classic() +
+  #scale_y_continuous(limits = c(-0.01, 1)) +
+    theme(plot.title = element_text(size=20, face = "bold"), 
+          axis.text=element_text(size=16, face="bold"),
+          strip.text.y = element_text(size = 16, face = "bold"),
+          axis.title=element_text(size=18, face="bold"),
+          strip.text.x = element_text(size = 16, face="bold"),
+          #axis.text.x = element_text(angle = 15, hjust=0.8),
+          legend.position = c(0.9, 0.1), 
+          legend.title = element_text(size=18, face="bold"),
+          legend.text = element_text(size=18))
+
+p1
+```
+
+```{r}
+pdf("graphs/pheno_stat.pdf", width=20, height=8)
+p1
+dev.off()
+```
+
