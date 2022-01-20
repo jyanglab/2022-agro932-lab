@@ -1,4 +1,6 @@
 largedata/
+slurm-script/
+slurm-log/
 
 # History files
 .Rhistory
