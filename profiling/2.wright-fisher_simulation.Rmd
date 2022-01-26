@@ -1,0 +1,88 @@
+---
+title: "Wright-Fisher Simulation for genetic drift"
+author: "Jinliang Yang"
+date: "01-27-2022"
+output: NULL
+---
+
+# Wright-Fisher simulation
+
+Consider a single nucleotide position with two alleles, $A_1$ and $A_2$
+
+In generation $t$ there are $x$ individuals carrying allele $A_1$, which is at frequency $p_t = x/2N$.
+
+This implies that there are $2N - x$ individuals carrying allele $A_2$, which is at frequency $q_t = 1- p_t= 1- x/2N$.
+
+The sampling of alleles for the next generations is equivalent to sampling from a binomial distribution with parameters size = $2N$ and prob= $x/2N$.
+
+Therefore, the mean and variance of $p$ in the next generation for the Wright-Fisher model are:
+
+
+\begin{align*}
+E(p_t) &= p_t \\
+Var(p_{t+1}) &= p_tq_t/2N 
+\end{align*}
+
+
+---
+
+# Wright Fisher simulation
+
+
+```{r}
+wright_fisher <- function(N=1000, t=100, A1=100){
+  # N: number of diploid individuals. [N=1000, integer]
+  # t: number of generations. [t=100, numeric]
+  # A1: number of A1 (the minor allele) in the first generation. [A1=10, integer]
+
+  # create a vector 
+  x <- 0
+  x[1] <- A1
+
+  # Start to loop over m generations
+  # binomial sampling at each generation - determines allele count in next generations
+  for (i in 2:t){
+    # calculate allele freq in the current generation
+    k <- (x[i-1])/(2*N)
+    # generate a vector with 2N individuals
+    n <- seq(0,2*N,1)
+    
+    # density for the binomial distribution with paramters size=2N and prob=k
+    prob <- dbinom(n, 2*N, k)
+    # plot(prob)
+    # choose one from a vector each with certain prob
+    x[i] <- sample(0:(2*N), 1, prob=prob)
+  }
+  # return back the results
+  return(x)
+}
+
+# sim1 <- wright_fisher(N=50, t=100, A1=20)
+```
+
+---
+
+```{r}
+set.seed(1234587)
+sim1 <- wright_fisher(N=50, t=1000, A1=20)
+plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+
+sim1 <- wright_fisher(N=50, t=1000, A1=20)
+plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+
+```
+
+
+```{r}
+set.seed(123456)
+sim1 <- wright_fisher(N=50000, t=100, A1=20000)
+#plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+write.table(sim1, "cache/sim1_hcc.txt", sep="\t", row.names=FALSE, quote=FALSE)
+
+
+#
+sim1 <- read.table("../../cache/sim1_hcc.txt", header=T)
+plot(sim1$x, type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+```
+
+
