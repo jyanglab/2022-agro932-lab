@@ -59,4 +59,43 @@ dev.off()
 
 ```
 
+----------------
+
+# Login onto cluster
+
+```{bash}
+ssh USERID@crane.unl.edu # DUO to activate it
+```
+
+```{bash}
+srun --qos=short --nodes=1 --licenses=common --ntasks=1 --mem 2G --time 2:00:00 --pty bash
+```
+
+And then cd to your repo
+
+```{bash}
+cd $COMMON
+```
+
+Then update your repo
+
+```{bash}
+git clone git@github.com:YOURID/2022-agro932-lab.git
+```
+
+otherwise
+
+```{bash}
+git pull
+cd largedata
+```
+
+
+----------------
+
+# Install a software on crane
+
+
+
+
 
