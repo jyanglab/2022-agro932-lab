@@ -96,6 +96,44 @@ cd largedata
 # Install a software on crane
 
 
+----------------
 
+# Calculate theta values
+
+```{r}
+frq <- read.table("data/frq.txt")
+names(frq) <- c("chr", "pos", "af")
+hist(frq$af, col="blue", xlab="allele freq", main="allele freq spectrum")
+```
+### theta pi
+```{r}
+pi <- function(n=10, p=0.1){
+  return(n/(n-1)*(1-p^2-(1-p)^2))
+}
+pi(n=10, p=0.1)
+```
+
+### use for loop to calculate pi for all SNP sites
+
+```{r}
+frq$pi <- 0
+for(i in 1:nrow(frq)){
+  frq$pi[i] <- pi(n=5, p=frq$af[i])
+}
+
+plot(x=frq$pos, y=frq$pi, type="o", xlab="Physical Position", ylab="Theta pi")
+```
+
+
+### SFS
+
+```{r}
+frq$new <- round(frq$af, 1)
+sfs <- table(frq$new)
+
+barplot(sfs, col="#cdc0b0", xlab="A1 allele frequency", 
+        ylab="No. of segregating sites", 
+        cex.axis =1.5, cex.names = 1.5, cex.lab=1.5)
+```
 
 
