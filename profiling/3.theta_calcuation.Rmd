@@ -5,84 +5,135 @@ date: "02-03-2022"
 output: NULL
 ---
 
-# Wright-Fisher simulation
+## Path Normalization
 
-Consider a single nucleotide position with two alleles, $A_1$ and $A_2$
-
-In generation $t$ there are $x$ individuals carrying allele $A_1$, which is at frequency $p_t = x/2N$.
-
-This implies that there are $2N - x$ individuals carrying allele $A_2$, which is at frequency $q_t = 1- p_t= 1- x/2N$.
-
-The sampling of alleles for the next generations is equivalent to sampling from a binomial distribution with parameters size = $2N$ and prob= $x/2N$.
-
-Therefore, the mean and variance of $p$ in the next generation for the Wright-Fisher model are:
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//')) 
+#library(tidyverse)
+```
 
 
-\begin{align*}
-E(p_{t+}) &= p_t \\
-Var(p_{t+1}) &= p_tq_t/2N 
-\end{align*}
-
-
----
-
-# Wright Fisher simulation
+# Wright Fisher function
 
 
 ```{r}
-wright_fisher <- function(N=1000, t=100, A1=100){
-  # N: number of diploid individuals. [N=1000, integer]
-  # t: number of generations. [t=100, numeric]
-  # A1: number of A1 (the minor allele) in the first generation. [A1=10, integer]
-
-  # create a vector 
-  x <- 0
-  x[1] <- A1
-
-  # Start to loop over m generations
-  # binomial sampling at each generation - determines allele count in next generations
-  for (i in 2:t){
-    # calculate allele freq in the current generation
-    k <- (x[i-1])/(2*N)
-    # generate a vector with 2N individuals
-    n <- seq(0,2*N,1)
-    
-    # density for the binomial distribution with paramters size=2N and prob=k
-    prob <- dbinom(n, 2*N, k)
-    # plot(prob)
-    # choose one from a vector each with certain prob
-    x[i] <- sample(0:(2*N), 1, prob=prob)
+wright_fisher <- function(N=1000, A1=100, t=1000){
+  p <- A1/(2*N)
+  ### make a numeric vector to hold the results
+  freq <- as.numeric();
+  t=1000
+  ### Use for loop to run over t generations
+  for (i in 1:t){
+    A1 <- rbinom(1, 2*N, p)
+    p <- A1/(2*N)
+    freq[i] <- p
   }
-  # return back the results
-  return(x)
+  return(freq)
 }
-
-# sim1 <- wright_fisher(N=50, t=100, A1=20)
 ```
 
 ---
 
+## Apply the function 
 ```{r}
 set.seed(1234587)
 sim1 <- wright_fisher(N=50, t=1000, A1=20)
 plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+```
 
-sim1 <- wright_fisher(N=50, t=1000, A1=20)
-plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+## Apply the function to conduct 1000 simulations
+
+```{r}
+set.seed(1234)
+frq <- wright_fisher(N=1000, A1=100, t=1000)
+pdf("graphs/sim1000.pdf", width=8, height=8)
+plot(frq, type="l", ylim=c(0,1), col=3, xlab="Generations", ylab=expression(p(A[1])))
+    for(u in 1:1000){
+      frq <- wright_fisher(N=1000, A1=100, t=1000)
+      random <- sample(1:1000,1,replace=F)
+      randomcolor <- colors()[random] 
+      lines(frq,type="l",col=(randomcolor))
+    }
+dev.off()
 
 ```
 
+----------------
+
+# Login onto cluster
+
+```{bash}
+ssh USERID@crane.unl.edu # DUO to activate it
+```
+
+```{bash}
+srun --qos=short --nodes=1 --licenses=common --ntasks=1 --mem 2G --time 2:00:00 --pty bash
+```
+
+And then cd to your repo
+
+```{bash}
+cd $COMMON
+```
+
+Then update your repo
+
+```{bash}
+git clone git@github.com:YOURID/2022-agro932-lab.git
+```
+
+otherwise
+
+```{bash}
+git pull
+cd largedata
+```
+
+
+----------------
+
+# Install a software on crane
+
+
+----------------
+
+# Calculate theta values
 
 ```{r}
-set.seed(123456)
-sim1 <- wright_fisher(N=50000, t=100, A1=20000)
-#plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
-write.table(sim1, "cache/sim1_hcc.txt", sep="\t", row.names=FALSE, quote=FALSE)
+frq <- read.table("data/frq.txt")
+names(frq) <- c("chr", "pos", "af")
+hist(frq$af, col="blue", xlab="allele freq", main="allele freq spectrum")
+```
+### theta pi
+```{r}
+pi <- function(n=10, p=0.1){
+  return(n/(n-1)*(1-p^2-(1-p)^2))
+}
+pi(n=10, p=0.1)
+```
+
+### use for loop to calculate pi for all SNP sites
+
+```{r}
+frq$pi <- 0
+for(i in 1:nrow(frq)){
+  frq$pi[i] <- pi(n=5, p=frq$af[i])
+}
+
+plot(x=frq$pos, y=frq$pi, type="o", xlab="Physical Position", ylab="Theta pi")
+```
 
 
-#
-sim1 <- read.table("../../cache/sim1_hcc.txt", header=T)
-plot(sim1$x, type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+### SFS
+
+```{r}
+frq$new <- round(frq$af, 1)
+sfs <- table(frq$new)
+
+barplot(sfs, col="#cdc0b0", xlab="A1 allele frequency", 
+        ylab="No. of segregating sites", 
+        cex.axis =1.5, cex.names = 1.5, cex.lab=1.5)
 ```
 
 
