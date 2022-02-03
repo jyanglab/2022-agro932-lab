@@ -28,6 +28,7 @@ Var(p_{t+1}) &= p_tq_t/2N
 
 # Wright Fisher simulation
 
+### you can do this on your local computer!
 
 ```{r}
 wright_fisher <- function(N=1000, t=100, A1=100){
@@ -62,6 +63,7 @@ wright_fisher <- function(N=1000, t=100, A1=100){
 
 ---
 
+# simulate for one time
 ```{r}
 set.seed(1234587)
 sim1 <- wright_fisher(N=50, t=1000, A1=20)
@@ -75,14 +77,14 @@ plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
 
 ```{r}
 set.seed(123456)
-sim1 <- wright_fisher(N=50000, t=100, A1=20000)
-#plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
-write.table(sim1, "cache/sim1_hcc.txt", sep="\t", row.names=FALSE, quote=FALSE)
-
-
-#
-sim1 <- read.table("../../cache/sim1_hcc.txt", header=T)
-plot(sim1$x, type="o", pch=19, xlab="Generations", ylab="A1 allele count")
+frq <- wright_fisher(N=1000, A1=100, t=1000)
+plot(frq, type="l", ylim=c(0,1), col=3, xlab="Generations", ylab=expression(p(A[1])))
+    for(u in 1:100){
+      frq <- wright_fisher(N=1000, A1=100, t=1000)
+      random <- sample(1:1000,1,replace=F)
+      randomcolor <- colors()[random] 
+      lines(frq,type="l",col=(randomcolor))
+    }
 ```
 
 
