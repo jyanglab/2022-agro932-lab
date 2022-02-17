@@ -41,20 +41,21 @@ The vast majority of nonsynonymous mutations are deleterious, and negative (puri
 
 ```{r}
 N=10000
-Ns <- seq(from=1, to=100, by=1)
-sd <- -Ns/N
-plot(sd, dnds(fa=0, fd=0.9, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, xlab="sd", ylab="dN/dS", cex.lab=1, ylim=c(0,1))
-lines(sd, dnds(fa=0, fd=0.5, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="blue")
-lines(sd, dnds(fa=0, fd=0.1, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="red")
+Ns <- seq(from=-1, to=0, by=0.01)
+sd <- Ns/N
+plot(Ns, dnds(fa=0, fd=0.9, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, 
+     xlab="Ns", ylab="dN/dS", cex.lab=1)
+lines(Ns, dnds(fa=0, fd=0.5, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="blue")
+lines(Ns, dnds(fa=0, fd=0.1, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="red")
 ```
 
 The majority of nonsynonymous mutations are deleterious, but here may be some unknown fraction of advantageous mutations.
 
 ```{r}
 N=10000
-Ns <- seq(from=1, to=100, by=1)
+Ns <- seq(from=0, to=1, by=0.01)
 sa <- Ns/N
-plot(sa, dnds(fa=0.5, fd=0.1, N=N, sa=sa, sd=-1), type="l", lty=1, lwd=3, xlab="sa", ylab="dN/dS", cex.lab=1)
+plot(Ns, dnds(fa=0.5, fd=0.1, N=N, sa=sa, sd=-1), type="l", lty=1, lwd=3, xlab="Ns", ylab="dN/dS", cex.lab=1)
 ```
 
 --------------------------------
