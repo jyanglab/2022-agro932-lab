@@ -23,11 +23,14 @@ dnds <- function(fa=0, fd=0, N=1000, sa=1, sd=0){
 
 ```{r}
 N=1000
-Ns <- seq(from=-1, to=1, by=1)
-sd <- -Ns/N
-plot(sd, dnds(fa=0, fd=0.9, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, xlab="sd", ylab="dN/dS", cex.lab=1, ylim=c(0,1))
-lines(sd, dnds(fa=0, fd=0.5, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="blue")
-lines(sd, dnds(fa=0, fd=0.1, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="red")
+Ns <- seq(from=-1, to=0, by=0.01)
+sd <- Ns/N
+Ns <- seq(from=0, to=1, by=0.01)
+sa <- Ns/N
+plot(Ns, dnds(fa=0.1, fd=0.9, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, 
+     xlab="Ns", ylab="dN/dS", cex.lab=1, ylim=c(0, 5))
+lines(Ns, dnds(fa=0.1, fd=0.5, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, col="blue")
+lines(Ns, dnds(fa=0.9, fd=0.1, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, col="red")
 ```
 
 
