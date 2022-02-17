@@ -2,7 +2,7 @@
 title: "Direct Selection"
 author: "Jinliang Yang"
 date: "02-16-2022"
-output: NULL
+output: pdf_document
 ---
 
 ## Path Normalization
@@ -15,7 +15,7 @@ knitr::opts_knit$set(root.dir=normalizePath('..//'))
 
 --------------------------------
 
-Probability of fixation, relative to a neutral allele, of new, selected mutations:
+# Probability of fixation, relative to a neutral allele, of new, selected mutations:
 
 ```{r}
 ns <- seq(from = -1, to =1, by=0.01)
