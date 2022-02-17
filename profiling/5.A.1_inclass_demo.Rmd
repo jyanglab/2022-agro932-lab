@@ -1,0 +1,36 @@
+---
+title: "R Notebook"
+output: html_notebook
+date: 02-16-2022
+author: J. Yang
+---
+
+
+```{r}
+ns <- seq(from = -1, to =1, by=0.01)
+plot(ns, 4*ns/(1 - exp(-4*ns)), xlab="Ns", ylab="")
+abline(v=0, lty=2, lwd=2)
+```
+
+```{r}
+dnds <- function(fa=0, fd=0, N=1000, sa=1, sd=0){
+  f0 <- 1 - fa - fd
+  r <- f0 + 4*N*fa*sa + (4*N*fd*sd)/(1 - exp(-4*N*sd))
+  return(r)
+}
+```
+
+
+```{r}
+N=1000
+Ns <- seq(from=-1, to=1, by=1)
+sd <- -Ns/N
+plot(sd, dnds(fa=0, fd=0.9, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, xlab="sd", ylab="dN/dS", cex.lab=1, ylim=c(0,1))
+lines(sd, dnds(fa=0, fd=0.5, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="blue")
+lines(sd, dnds(fa=0, fd=0.1, N=N, sa=1, sd=sd), type="l", lty=1, lwd=3, col="red")
+```
+
+
+
+
+
