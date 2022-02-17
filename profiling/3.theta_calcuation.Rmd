@@ -46,8 +46,8 @@ plot(sim1[1:100], type="o", pch=19, xlab="Generations", ylab="A1 allele count")
 
 ```{r}
 set.seed(1234)
-frq <- wright_fisher(N=1000, A1=100, t=1000)
-pdf("graphs/sim1000.pdf", width=8, height=8)
+frq <- wright_fisher(N=1000, A1=500, t=1000)
+pdf("graphs/sim1000_0.5.pdf", width=8, height=8)
 plot(frq, type="l", ylim=c(0,1), col=3, xlab="Generations", ylab=expression(p(A[1])))
     for(u in 1:1000){
       frq <- wright_fisher(N=1000, A1=100, t=1000)
