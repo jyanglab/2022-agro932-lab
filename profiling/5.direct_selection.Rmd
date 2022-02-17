@@ -89,15 +89,11 @@ Login onto cluster
 ssh USERID@crane.unl.edu # DUO to activate it
 ```
 
-request a computation node:
-```{bash, eval=FALSE}
-srun --qos=short --nodes=1 --licenses=common --ntasks=1 --mem 2G --time 2:00:00 --pty bash
-```
-
 And then cd to your repo
 
 ```{bash, eval=FALSE}
-cd $COMMON # then cd to your repo
+cd $COMMON 
+# then cd to your repo
 ```
 
 Then update your repo
@@ -106,7 +102,7 @@ Then update your repo
 git pull
 ```
 
-If you made changes in your local repo, then add them, and sync with remote
+If you made changes in your HCC repo, then add them, and sync with remote
 
 ```{bash, eval=FALSE}
 git add --all
@@ -114,97 +110,98 @@ git commit -m "updates from cluster"
 git push
 ```
 
-Then,
+
+--------------------------------
+
+# submit slurm job
+
+```{bash, eval=FALSE}
+mkdir slurm-log
+mkdir slurm-script
+cd slurm-script
+```
+
+
+Use `vi` to create a slurm script
+
+```{bash, eval=FALSE}
+vi my_first_slurm_job.sh
+i #insert text
+#copy text
+#type esc
+:sq # save and quit
+```
+
+
+type `pwd` to find your current path
 
 ```{bash}
-cd largedata
+#!/bin/bash -l
+#SBATCH -D /common/jyanglab/jyang21/courses/2022-agro932-lab
+#SBATCH -o /common/jyanglab/jyang21/courses/2022-agro932-lab/slurm-log/steve-stdout-%j.txt
+#SBATCH -e /common/jyanglab/jyang21/courses/2022-agro932-lab/slurm-log/steve-stderr-%j.txt
+#SBATCH -J theta
+#SBATCH -t 1:00:00
+#SBATCH --mail-user=your_email_address@gmail.com
+#SBATCH --mail-type=END #email if ends
+#SBATCH --mail-type=FAIL #email if fails
+
+set -e
+set -u
+# insert your script here
+
+
 ```
 
 
 
+```{bash, eval=FALSE}
+module load bwa samtools
+mkdir largedata/lab5/
+cp data/Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa largedata/lab5
+
+# simulate 20 individuals
+cd largedata/lab5
+for i in {1..20}
+do
+   wgsim Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa -e 0 -d 500 -N 50000 -1 100 -2 100 -r 0.1  -R 0 -X 0 l$i.read1.fq l$i.read2.fq
+done
+
+# alignment
+module load bwa samtools bcftools
+# index the reference genome
+bwa index Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa
+
+# using bwa mem to align the reads to the reference genome 
+for i in {1..20}; do bwa mem Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa l$i.read1.fq l$i.read2.fq | samtools view -bSh - > l$i.bam; done
+# sort
+for i in *.bam; do samtools sort $i -o sorted_$i; done
+# index them
+for i in sorted*.bam; do samtools index $i; done
 
 
+### index the genome assembly
+samtools faidx Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa
+### Run `mpileup` to generate VCF format
+ls sorted_l*bam > bamlist.txt
+samtools mpileup -g -f Zea_mays.B73_RefGen_v4.dna.chromosome.Mt.fa -b bamlist.txt > myraw.bcf
+bcftools call myraw.bcf -cv -Ob -o snps.bcf
 
-
-
-
-
-
-
-
-
-
-
-
-
-# Extract the SNP information
-
-FORMAT tags can be extracted using the square brackets [] operator, which loops over all samples. For example, to print the GT field followed by PL field we can write:
-
-```{bash}
-module load bcftools
+### Extract allele frequency at each position
+bcftools query -f '%CHROM %POS %AF1\n' snps.bcf > frq.txt
 bcftools query -f '%CHROM %POS %REF %ALT [\t%GT]\n' snps.bcf > geno.txt
 ```
 
-- Print chromosome, position, ref allele and the first alternate allele
-- %TGT            Translated genotype (e.g. C/A)
-%TAG{INT}       Curly brackets to print a subfield (e.g. INFO/TAG{1}, the indexes are 0-based)
 
+```{bash, eval=FALSE}
+cd ..
+sbatch --qos=short --licenses=common --ntasks=5 --mem=10G slurm-script/my_first_slurm_job.sh
 
-
-```{r, eval=FALSE}
-geno <- read.table("largedata/geno.txt", header=FALSE)
-names(geno) <- c("chr", "pos", "ref", "alt", "l1", "l2", "l3", "l4", "l5")
-
-
-for(i in 5:9){
-  # replace slash and everything after it as nothing
-  geno$newcol <- gsub("/.*", "", geno[,i] )
-  # extract the line name
-  nm <- names(geno)[i]
-  # assign name for this allele
-  names(geno)[ncol(geno)] <- paste0(nm, sep="_a1")
-  
-  geno$newcol <- gsub(".*/", "", geno[,i] )
-  names(geno)[ncol(geno)] <- paste0(nm, sep="_a2")
-}
-
+## check your job status
+squeue | grep "YOUR USER ID"
 ```
 
-----------------
-
-# Compute p1, p2, p
-
-```{r}
-geno$p <- apply(geno[, 10:19], 1, function(x) {sum(as.numeric(as.character(x)))})
-geno$p <- geno$p/10
-
-geno$p1 <- apply(geno[, 10:15], 1, function(x) {sum(as.numeric(as.character(x)))})
-geno$p1 <- geno$p1/6
-
-geno$p2 <- apply(geno[, 16:19], 1, function(x) {sum(as.numeric(as.character(x)))})
-geno$p2 <- geno$p2/4
-```
-
-Then finally,
-
-```{r}
-geno$fst <- with(geno, ((p1-p)^2 + (p2-p)^2)/(2*p*(1-p)) )
-```
-
-Output the Fst results
+-----------------
 
 
-```{r}
-write.table(geno, "cache/fst.csv", sep=",", row.names = FALSE, quote=FALSE)
-```
 
-----------------
-
-# Visualize the results on my local computer
-
-```{r}
-fst <- read.csv("cache/fst.csv")
-
-plot(fst$pos, fst$fst, xlab="Physical position", ylab="Fst value", main="")
-```
