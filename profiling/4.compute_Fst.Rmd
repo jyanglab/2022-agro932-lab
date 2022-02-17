@@ -1,0 +1,128 @@
+---
+title: "Fst calculation"
+author: "Jinliang Yang"
+date: "02-10-2022"
+output: NULL
+---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//')) 
+#library(tidyverse)
+```
+
+# Work on the cluster
+
+Login onto cluster
+
+```{bash, eval=FALSE}
+ssh USERID@crane.unl.edu # DUO to activate it
+```
+
+request a computation node:
+```{bash, eval=FALSE}
+srun --qos=short --nodes=1 --licenses=common --ntasks=1 --mem 2G --time 2:00:00 --pty bash
+```
+
+And then cd to your repo
+
+```{bash, eval=FALSE}
+cd $COMMON # then cd to your repo
+```
+
+Then update your repo
+
+```{bash, eval=FALSE}
+git pull
+```
+
+If you made changes in your local repo, then add them, and sync with remote
+
+```{bash, eval=FALSE}
+git add --all
+git commit -m "updates from cluster"
+git push
+```
+
+Then,
+
+```{bash}
+cd largedata
+```
+
+
+----------------
+
+# Extract the SNP information
+
+FORMAT tags can be extracted using the square brackets [] operator, which loops over all samples. For example, to print the GT field followed by PL field we can write:
+
+```{bash}
+module load bcftools
+bcftools query -f '%CHROM %POS %REF %ALT [\t%GT]\n' snps.bcf > geno.txt
+```
+
+- Print chromosome, position, ref allele and the first alternate allele
+- %TGT            Translated genotype (e.g. C/A)
+%TAG{INT}       Curly brackets to print a subfield (e.g. INFO/TAG{1}, the indexes are 0-based)
+
+
+
+```{r, eval=FALSE}
+geno <- read.table("largedata/geno.txt", header=FALSE)
+names(geno) <- c("chr", "pos", "ref", "alt", "l1", "l2", "l3", "l4", "l5")
+
+
+for(i in 5:9){
+  # replace slash and everything after it as nothing
+  geno$newcol <- gsub("/.*", "", geno[,i] )
+  # extract the line name
+  nm <- names(geno)[i]
+  # assign name for this allele
+  names(geno)[ncol(geno)] <- paste0(nm, sep="_a1")
+  
+  geno$newcol <- gsub(".*/", "", geno[,i] )
+  names(geno)[ncol(geno)] <- paste0(nm, sep="_a2")
+}
+
+```
+
+----------------
+
+# Compute p1, p2, p
+
+```{r}
+geno$p <- apply(geno[, 10:19], 1, function(x) {sum(as.numeric(as.character(x)))})
+geno$p <- geno$p/10
+
+geno$p1 <- apply(geno[, 10:15], 1, function(x) {sum(as.numeric(as.character(x)))})
+geno$p1 <- geno$p1/6
+
+geno$p2 <- apply(geno[, 16:19], 1, function(x) {sum(as.numeric(as.character(x)))})
+geno$p2 <- geno$p2/4
+```
+
+Then finally,
+
+```{r}
+geno$fst <- with(geno, ((p1-p)^2 + (p2-p)^2)/(2*p*(1-p)) )
+```
+
+Output the Fst results
+
+
+```{r}
+write.table(geno, "cache/fst.csv", sep=",", row.names = FALSE, quote=FALSE)
+```
+
+----------------
+
+# Visualize the results on my local computer
+
+```{r}
+fst <- read.csv("cache/fst.csv")
+
+plot(fst$pos, fst$fst, xlab="Physical position", ylab="Fst value", main="")
+```
