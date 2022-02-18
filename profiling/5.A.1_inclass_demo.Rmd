@@ -34,6 +34,26 @@ lines(Ns, dnds(fa=0.9, fd=0.1, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, col="
 ```
 
 
+```{r}
+# expected freq spectra
+f <- function(q, ns){
+  frq = 2/(q*(1-q)) * (1 - exp(-4*ns*(1-q))) / (1 - exp(-4*ns))
+  return(frq)}
+q <- seq(from = 0.01, to =0.99, by=0.01)
+## Ploting function
+plot(q, f(q, ns=0.01), type="l", lty=1, lwd=3, 
+     xlab="derived allele frq",
+     ylab="No. of polymorhpic sites", cex.lab=2)
+
+lines(q, f(q, ns=-50), type="l", lty=1, lwd=3, col="red")
+lines(q, f(q, ns=-5), type="l", lty=2, lwd=3, col="red")
+lines(q, f(q, ns=5), type="l", lty=1, lwd=3, col="blue")
+lines(q, f(q, ns=50), type="l", lty=2, lwd=3, col="blue")
+legend(0.6, 200, title="Ns", legend=c("-50", "5", "0", "-5", "50"), 
+       
+       col=c("red", "red", "black", "blue", "blue"), 
+       lty=c(1,2,1,1,2), cex=1, lwd=3)
+```
 
 
 
