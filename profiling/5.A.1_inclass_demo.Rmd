@@ -1,0 +1,59 @@
+---
+title: "R Notebook"
+output: html_notebook
+date: 02-16-2022
+author: J. Yang
+---
+
+
+```{r}
+ns <- seq(from = -1, to =1, by=0.01)
+plot(ns, 4*ns/(1 - exp(-4*ns)), xlab="Ns", ylab="")
+abline(v=0, lty=2, lwd=2)
+```
+
+```{r}
+dnds <- function(fa=0, fd=0, N=1000, sa=1, sd=0){
+  f0 <- 1 - fa - fd
+  r <- f0 + 4*N*fa*sa + (4*N*fd*sd)/(1 - exp(-4*N*sd))
+  return(r)
+}
+```
+
+
+```{r}
+N=1000
+Ns <- seq(from=-1, to=0, by=0.01)
+sd <- Ns/N
+Ns <- seq(from=0, to=1, by=0.01)
+sa <- Ns/N
+plot(Ns, dnds(fa=0.1, fd=0.9, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, 
+     xlab="Ns", ylab="dN/dS", cex.lab=1, ylim=c(0, 5))
+lines(Ns, dnds(fa=0.1, fd=0.5, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, col="blue")
+lines(Ns, dnds(fa=0.9, fd=0.1, N=N, sa=sa, sd=sd), type="l", lty=1, lwd=3, col="red")
+```
+
+
+```{r}
+# expected freq spectra
+f <- function(q, ns){
+  frq = 2/(q*(1-q)) * (1 - exp(-4*ns*(1-q))) / (1 - exp(-4*ns))
+  return(frq)}
+q <- seq(from = 0.01, to =0.99, by=0.01)
+## Ploting function
+plot(q, f(q, ns=0.01), type="l", lty=1, lwd=3, 
+     xlab="derived allele frq",
+     ylab="No. of polymorhpic sites", cex.lab=2)
+
+lines(q, f(q, ns=-50), type="l", lty=1, lwd=3, col="red")
+lines(q, f(q, ns=-5), type="l", lty=2, lwd=3, col="red")
+lines(q, f(q, ns=5), type="l", lty=1, lwd=3, col="blue")
+lines(q, f(q, ns=50), type="l", lty=2, lwd=3, col="blue")
+legend(0.6, 200, title="Ns", legend=c("-50", "5", "0", "-5", "50"), 
+       
+       col=c("red", "red", "black", "blue", "blue"), 
+       lty=c(1,2,1,1,2), cex=1, lwd=3)
+```
+
+
+

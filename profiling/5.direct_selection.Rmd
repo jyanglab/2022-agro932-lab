@@ -196,7 +196,7 @@ bcftools query -f '%CHROM %POS %REF %ALT [\t%GT]\n' snps.bcf > geno.txt
 
 ```{bash, eval=FALSE}
 cd ..
-sbatch --qos=short --licenses=common --ntasks=5 --mem=10G slurm-script/my_first_slurm_job.sh
+sbatch --qos=short --licenses=common --ntasks=10 --mem=20G slurm-script/my_first_slurm_job.sh
 
 ## check your job status
 squeue | grep "YOUR USER ID"
