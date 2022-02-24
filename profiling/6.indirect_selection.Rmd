@@ -73,6 +73,7 @@ p1
 ```
 
 ---
+
 # Site Freq Spectrum
 
 Simulate two SFS
@@ -116,6 +117,7 @@ R
 ```
 
 ---
+
 # Obtain SFS from the sequencing data
 
 ```{r, eval=FALSE}
@@ -142,6 +144,7 @@ write.table(geno[, c("V1", "V2", "da")], "cache/Mt_derived_alleles.csv",
 
 
 ---
+
 # Obtain SFS from the sequencing data
 
 ```{r, eval=FALSE}
@@ -202,6 +205,7 @@ dev.off()
 
 
 ---
+
 # General feature format (GFF) from EnsemblPlants
 
 Maize [reference genome](https://plants.ensembl.org/Zea_mays/Info/Index)
@@ -273,6 +277,7 @@ gunzip Zea_mays.B73_RefGen_v4.46.chromosome.Mt.gff3.gz
   
 
 ---
+
 # General feature format (GFF) version 3
 
 ```
@@ -297,6 +302,7 @@ gunzip Zea_mays.B73_RefGen_v4.46.chromosome.Mt.gff3.gz
   - "-", (negative, or 3' -> 5'), "." (undetermined).
 
 ---
+
 # General feature format (GFF) version 3
 
 ```
