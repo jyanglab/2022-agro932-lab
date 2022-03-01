@@ -1,6 +1,4 @@
 largedata/
-slurm-script/
-slurm-log/
 
 # History files
 .Rhistory
@@ -16,7 +14,7 @@ slurm-log/
 *-Ex.R
 
 # Output files from R CMD build
-/*.tar.gz
+#/*.tar.gz
 
 # Output files from R CMD check
 /*.Rcheck/
@@ -38,4 +36,3 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
-.Rproj.user
