@@ -67,7 +67,7 @@ p1 <- ggplot(data=df,aes(x=df$allele, y=df$frq)) +
           axis.title=element_text(size=fsize, face="bold"),
           legend.title = element_text(size=fsize, face="bold"),
           legend.text = element_text(size=fsize)) +
-      xlab("# of individuals with derived alleles") + 
+      xlab("# of haplotypes with derived alleles") + 
       ylab("Counts")
 p1
 ```
@@ -86,7 +86,7 @@ TajimaD(sfs=df2$frq)
 
 p2 <- ggplot(df, aes(x=allele, y=frq, fill=sel)) +
     geom_bar(stat="identity", position=position_dodge()) +
-    xlab("# of individuals with derived alleles") + 
+    xlab("# of haps with derived alleles") + 
     ylab("Counts") +
     #scale_fill_manual(values=c("#E69F00","#56B4E9", "#009E73")) +
     #scale_x_discrete(labels=c("-log10(mu)","-log10(nu)","Ne*s")) +
@@ -148,6 +148,21 @@ write.table(geno[, c("V1", "V2", "da")], "cache/Mt_derived_alleles.csv",
 df <- read.csv("cache/Mt_derived_alleles.csv")
 sfs <- table(df$da)
 TajimaD(sfs=sfs)
+```
+
+```{r}
+d <- as.data.frame(sfs)
+p1 <- ggplot(data=d,aes(x=d$Var1, y=d$Freq)) +
+        geom_bar(stat="identity", position=position_dodge()) +
+        theme_bw() +
+        theme(#axis.text.x=element_blank(), #axis.ticks.x=element_blank(),
+          axis.text=element_text(size=fsize),
+          axis.title=element_text(size=fsize, face="bold"),
+          legend.title = element_text(size=fsize, face="bold"),
+          legend.text = element_text(size=fsize)) +
+      xlab("# of haplotypes with derived alleles") + 
+      ylab("Counts")
+p1
 ```
 
 --
@@ -374,5 +389,10 @@ res <- res[order(res$tajimad),]
 ```
 
 
+```{r}
+pdf("graphs/tajimad_gene_res.pdf", height=5, width=10)
+plot(x=res$win, y=res$tajimad, pch=16, col="red", xlab="Physical Position (gene-based)", ylab="Tajima D")
+dev.off()
+```
 
 
