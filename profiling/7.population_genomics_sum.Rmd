@@ -1,0 +1,104 @@
+---
+title: "Population genomics: popular software"
+author: "Jinliang Yang"
+date: "03-03-2022"
+output: pdf_document
+---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//')) 
+#library(tidyverse)
+```
+
+--------------------------------
+
+# SweepFinder2
+
+A program written in C that can perform genomic scans for recent selective sweeps
+
+> DeGiorgio et al., 2016
+
+### Download the binary file
+
+```{bash, eval=FALSE}
+cd $HOME/bin
+wget http://degiorgiogroup.fau.edu/SF2.tar.gz
+```
+
+### Install it
+
+```{bash, eval=FALSE}
+# extract the compressed files using the command
+tar -xzvf SF2.tar.gz
+# Change directory to SF2 using a command such as
+cd SF2
+#Compile SweepFinder2 with the command
+make
+The SweepFinder2 executable will be located in the SF2 directory
+```
+
+
+```{bash}
+python setup.py install --home $HOME/bin
+```
+
+
+
+
+```{bash, eval=FALSE}
+sorted_l10.bam	sorted_l11.bam	sorted_l12.bam	sorted_l13.bam	sorted_l14.bam	sorted_l15.bam	sorted_l16.bam	sorted_l17.bam	sorted_l18.bam	sorted_l19.bam	sorted_l1.bam	sorted_l20.bam	sorted_l2.bam	sorted_l3.bam	sorted_l4.bam	sorted_l5.bam	sorted_l6.bam	sorted_l7.bam	sorted_l8.bam	sorted_l9.bam
+```
+
+
+```{bash}
+for ((i=1;i<=10;i++)) ; do echo "sorted_l$i.bam" >> pop1.txt;  done
+for ((i=11;i<=20;i++)) ; do echo "sorted_l$i.bam" >> pop2.txt;  done
+```
+
+# Fst
+
+```{bash}
+#1. SNP based FST
+vcftools --bcf input_file.bcf myraw.bcf --weir-fst-pop sample_list_pop1 --weir-fst-pop sample_list_pop2 --out Pop1_Pop2_site
+
+
+# 2. Window based FST
+vcftools --vcf genotype.vcf --weir-fst-pop sample_list_pop1 --weir-fst-pop sample_list_pop2 --fst-window-size 100000 --fst-window-step 10000 --out Pop1_Pop2_100k
+
+module load vcftools
+vcftools --bcf snps.bcf --weir-fst-pop pop1.txt --weir-fst-pop pop2.txt --fst-window-size 10000 --fst-window-step 1000 --out win_1k
+
+```
+
+# XP-CLR
+
+```{bash, eval=FALSE}
+
+module load xpclr/1.1
+
+module load bcftools
+bcftools convert snps.bcf -O v -o snp.vcf 
+
+cd largedata/lab7
+xpclr --input snp.vcf --out ./res.txt  --format vcf --samplesA pop1.txt --samplesB pop2.txt --chr Mt --start 1 --stop 10000 --ld 0.7 --maxsnps 200 --minsnps 200 --size 10000 --step 5000
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
