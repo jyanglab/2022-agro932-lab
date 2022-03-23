@@ -100,6 +100,7 @@ To learn more about conda, read this [introduction](https://astrobiomike.github.
 The simplest way we can create a new conda environment is like so:
 
 ```{bash, eval=FALSE}
+module load anaconda
 conda create -n mypopgen
 ```
 
@@ -229,7 +230,8 @@ barplot(s,names=1:length(s), main='SFS')
 #### Histgram distribution of the theta values
 
 ```{r, eval=FALSE}
-theta <- read.table("cache/output.theta.5k.gz.pestPG", header=TRUE)
+#library("data.table")
+theta <- read.delim("cache/output.theta.5k.gz.pestPG", header=TRUE)
 hist(theta$tW, xlab="theta_w", main="disverity")
 ```
 
