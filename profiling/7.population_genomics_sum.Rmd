@@ -153,6 +153,11 @@ module load angsd
 angsd
 ```
 
+#### request a computer node
+```{bash, eval=FALSE}
+srun --qos=short --nodes=1 --licenses=common --ntasks=4 --mem 8G --time 2:00:00 --pty bash
+```
+
 ---
 
 # ANGSD for diversity meansurement

@@ -1,0 +1,25 @@
+---
+title: "Indirect Selection"
+author: "Jinliang Yang"
+date: "02-24-2022"
+output: pdf_document
+---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//')) 
+#library(tidyverse)
+```
+
+--------------------------------
+
+```{r}
+geno <- read.table("data/geno.txt", header=FALSE)
+dim(geno)
+head(geno)
+```
+
+
+
