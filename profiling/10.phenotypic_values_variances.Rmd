@@ -177,7 +177,7 @@ Let's find out $a$ and $d$ at a specific Marker `Mt_24242`:
 --
 
 ```{r, eval=FALSE}
-
+library(ggplot2)
 ggplot(gp, aes(x=as.factor(Mt_24242), y=height, color=as.factor(Mt_24242))) +
     geom_boxplot() +
     geom_jitter(color="black", size=1, alpha=0.9) +
@@ -329,7 +329,9 @@ Vg <- Va + Vd
 
 ```{r, eval=FALSE}
 h2 <- Va/Vp
+h2
 H2 <- Vg/Vp
+H2
 ```
 
 
