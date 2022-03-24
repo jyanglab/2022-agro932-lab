@@ -1,5 +1,5 @@
 ---
-title: "Indirect Selection"
+title: "Compute phenotypic values and variances"
 author: "Jinliang Yang"
 date: "02-24-2022"
 output: pdf_document
@@ -15,7 +15,15 @@ knitr::opts_knit$set(root.dir=normalizePath('..//'))
 
 --------------------------------
 
-```{r}
+# Select for shorter plants
+
+- Tom collected a population of 20 maize landraces to select short plants.
+- Then phenotypically characterized the 20 landraces and selected two of them as the founder lines to make an F2 population.
+- After phenotyping and genotyping, Tom needs to determine which individual plants be more valuable to be selected and crossed.
+
+--
+
+```{r, eval=FALSE}
 geno <- read.table("data/geno.txt", header=FALSE)
 dim(geno)
 head(geno)
@@ -23,12 +31,14 @@ names(geno) <- c("chr", "pos", "ref", "alt", paste0("plant", 1:20))
 ```
 
 
-### Create an F2 population
+---
 
-- Parent 1: plant1
-- Parent 2: plant18
+# Create an F2 population
 
-```{r}
+- To make the F2 population, Tom chose `plant1` and `plant18` as the parents.
+-  `plant1` and `plant18` were selfed five generations to be pure inbreds.
+
+```{r, eval=FALSE}
 ### Just sample 100 markers from this Mt chr
 set.seed(12579)
 markers <- sample(1:nrow(geno), size=100)
@@ -43,26 +53,25 @@ f$cM <- f$pos/5000
 ```
 
 
-### G
+---
 
-```{r}
+# Create an F2 population
+
+- To make the F2 population, Tom chose `plant1` and `plant18` as the parents.
+-  `plant1` and `plant18` were selfed five generations to be pure inbreds.
+
+```{r, eval=FALSE}
 install.packages("devtools")
 library(devtools)
 install_github("lian0090/simuPoisson")
-```
-
-```{r}
 library(simuPoisson)
-data(parentsGeno)
-data(map)
-#simulate 10 individuals
-progeny=simuPoisson(parentsGeno,map$chr,map$cM,10)
 ```
 
+--
 
-We simulated an F2 population with 200 individuals and 100 SNP markers
+Then, simulate an F2 population with 200 individuals and 100 SNP markers.
 
-```{r}
+```{r, eval=FALSE}
 pgeno <- t(f[, c("plant1", "plant18")])
 pgeno <- apply(pgeno, 2, as.numeric)
 f2 <- simuPoisson(pgeno, f$chr, f$cM, 200)
@@ -74,28 +83,37 @@ write.table(f2, "data/f2_geno.csv", sep=",", quote=FALSE)
 
 ---
 
-# Genotype frq and allele frq
+# Compute genotype frq and allele frq
 
-Coding `-1, 0, 1`
+```{r, eval=FALSE}
+f2 <- read.csv("data/f2_geno.csv")
+table(f2[,1])
+```
 
-Note, not all markers are segregting.
-```{r}
+Note that in this F2 population, the SNP coding is `-1, 0, 1` for $A_1A1$, $A_1A_2$, and $A_2A_2$.
+
+```{r, eval=FALSE}
 table(f2[,6])
 ```
 
-### Observed allele frequency
+---
 
-```{r}
+# Frequencies
+
+#### Observed allele frequency
+
+```{r, eval=FALSE}
 # For A1 allele
 p <- (52*2+92)/((52+92+56)*2)
 # For A2 allele
 q <- (56*2+92)/((52+92+56)*2)
 ```
 
+--
 
-### Observed genotype frequency
+#### Observed genotype frequency
 
-```{r}
+```{r, eval=FALSE}
 # For A1A1 genotype
 A1A1 <- 52/(52+92+56)
 # For A1A2 genotype
@@ -104,85 +122,61 @@ A1A2 <- 92/(52+92+56)
 A2A2 <- 56/(52+92+56)
 ```
 
+---
+# Frequencies
+
 
 ### Predicted genotype frequency
 
-```{r}
+```{r, eval=FALSE}
 p^2
 2*p*q
 q^2
-```
-```{r}
+
 chisq.test(rbind(c(A1A1, A1A2, A2A2), c(p^2, 2*p*q, q^2)))
 ```
 
 ---
 
-```{r}
-p1 <- rnorm(52, mean=60, sd=10)
-p2 <- rnorm(92, mean=90, sd=11)
-p3 <- rnorm(56, mean=80, sd=12)
-
-pheno <- f2[, 1:6]
-pheno[pheno[, 6]==-1, 5] <- p1
-pheno[pheno[, 6]==0, 5] <- p2
-pheno[pheno[, 6]==1, 5] <- p3
-
-pheno <- pheno[, 5:6]
-names(pheno)[1] <- c("height", "plantid")
-pheno$plantid <- paste0("plant", 1:nrow(pheno))
-write.table(pheno[, c(1,3)], "data/f2_pheno.csv", sep=",", row.names = FALSE, quote=FALSE)
-```
+# Phenotype
 
 
-```{r}
+From this F2 population, Tom measured the plant height for each individual plant. 
+  
+Phenotype in a population can be characterized in terms of its __mean__ and __variance__.
+
+
+
+---
+
+# Phenotype
+
+```{r, eval=FALSE}
 pheno <- read.csv("data/f2_pheno.csv")
-
 hist(pheno$height, main="Plant Height", xlab="Value (inch)", breaks=20)
 ```
 
+--
 
-```{r}
-library(ggplot2)
+### Combine genotype and phenotype files
 
-# Change line colors by groups
-ggplot(pheno, aes(x=height)) +
-  #facet_wrap(vars(trait), scales = "free") +
-  geom_histogram(aes(y=..density..), position="identity", alpha=0.8, bins=20)+
-  geom_density(alpha=0.38)+
-  #scale_color_manual(values=c("#E69F00", "#56B4E9", "#fe6f5e"))+
-  scale_color_manual(values=c("#E69F00"))+
-  #scale_fill_manual(values=c("#E69F00", "#56B4E9", "#fe6f5e"), labels=c("HE", "HO", "Nip"))+
-  labs(title="", x="Plant Height", y = "Density")+
-  #guides(color=FALSE, fill=guide_legend(title="")) +
-  theme_classic() +
-    theme(plot.title = element_text(size=20, face = "bold"), 
-          axis.text=element_text(size=16, face="bold"),
-          strip.text.y = element_text(size = 16, face = "bold"),
-          axis.title=element_text(size=18, face="bold"),
-          )
-
-```
-
-
-```{r}
+```{r, eval=FALSE}
 gp <- cbind(pheno, f2)
 ```
 
 
-Let's find out $a$ and $d$ at Marker `Mt_24242`
+# Genotypic value
 
-```{r}
-u <- mean(gp$height) # population mean
-# A1A1
-h1 <- mean(subset(gp, Mt_24242 == -1)$height) 
-# A1A2
-h12 <- mean(subset(gp, Mt_24242 == 0)$height)
-# A2A2
-h2 <- mean(subset(gp, Mt_24242 == 1)$height)
-```
+$P = G + E$
 
-```{r}
+$G = A + D$
+
+
+Let's find out $a$ and $d$ at a specific Marker `Mt_24242`:
+
+--
+
+```{r, eval=FALSE}
 
 ggplot(gp, aes(x=as.factor(Mt_24242), y=height, color=as.factor(Mt_24242))) +
     geom_boxplot() +
@@ -198,8 +192,27 @@ ggplot(gp, aes(x=as.factor(Mt_24242), y=height, color=as.factor(Mt_24242))) +
           )
 ```
 
+---
 
-```{r}
+# Genotypic value
+
+
+
+Let's find out $a$ and $d$ at a specific Marker `Mt_24242`:
+
+```{r, eval=FALSE}
+u <- mean(gp$height) # population mean
+# A1A1
+h1 <- mean(subset(gp, Mt_24242 == -1)$height) 
+# A1A2
+h12 <- mean(subset(gp, Mt_24242 == 0)$height)
+# A2A2
+h2 <- mean(subset(gp, Mt_24242 == 1)$height)
+```
+
+--
+
+```{r, eval=FALSE}
 a <- (h2 - h1)/2
 midpoint <- h1+a
 d <- h12 - midpoint
@@ -211,25 +224,35 @@ d <- h12 - midpoint
 
 The average effect of A1 and A2:
 
-```{r}
+```{r, eval=FALSE}
 alpha <- a + d*(q - p)
 alpha1 <- q*alpha
 alpha2 <- -p*alpha
 ```
 
-# Genotypic values
+--
 
-The Breeding value associated with 
+### Breeding value
 
-```{r}
-bv2 = u+alpha2 + alpha2
+
+The __Breeding value__ associated with Marker `Mt_24242` is defined as: the sum of $\alpha_i$ and $\alpha_j$.
+- Breeding value is the value of an individual as a parent!
+
+\begin{align*}
+BV_{ij} = \mu + \alpha_i + \alpha_j
+\end{align*}
+
+```{r, eval=FALSE}
 bv1 = u+alpha1 + alpha1
+bv2 = u+alpha2 + alpha2
 bv12 = u+alpha1 + alpha2
 ```
 
+---
 
+# Genotypic value and breeding value
 
-```{r}
+```{r, eval=FALSE}
 plot(c(0, 1, 2), c(h1, h12, h2), xlab="Genotype",ylab="", cex.lab=1.5, xaxt="n", pch=17, cex=2, col="red", ylim=c(60, 95)); 
 axis(1, at=c(0, 1, 2), labels=c("A1A1", "A1A2", "A2A2")); 
 mtext("Breeding Value", side = 4, line = 1, cex=1.5, col="blue"); 
@@ -238,24 +261,76 @@ points(c(0, 1, 2), c(bv2, bv12, bv1), cex=2, col="blue")
 lines(c(0, 1, 2), c(bv2, bv12, bv1), lwd=2, col="blue")
 ```
 
+---
 
 # Additive and dominance variance
 
 P = A + D + E
 
-```{r}
+### Phenotypic variance
+
+```{r, eval=FALSE}
 Vp <- var(gp$height)
 ```
 
-```{r}
+---
+
+# Additive genetic variance: $V_A$
+
+These breeding values have a mean of zero, and their variance is the sum of the products of the genotype frequencies and the squared breeding values:
+
+\begin{align*}
+V_A & = p^2(2q\alpha)^2 + 2pq(q-p)^2\alpha^2 + q^2(-2p\alpha)^2 \\
+           & = 2pq\alpha^2(2pq + (q-p)^2 + 2pq) \\
+           & = 2pq\alpha^2(p+q)^2 \\
+           & = 2pq\alpha^2 \\
+           & = 2pq(a + d(q-p))^2 \\
+\end{align*}
+
+--
+
+```{r, eval=FALSE}
 Va <- 2*p*q*(a + d*(q - p))^2
+```
+
+---
+
+# Dominance genetic variance: $V_D$
+
+The variance due to dominance deviations is:
+the sum of the products of the genotype frequencies and the squared dominance deviation values.
+
+\begin{align*}
+V_D & = p^2(-2q^2d)^2 + 2pq(2pqd)^2 + q^2(-2p^2d)^2 \\
+           & = 4p^2q^2d^2(q^2 + 2pq + p^2) \\
+           & = 4p^2q^2d^2 \\
+           & = (2pqd)^2 \\
+\end{align*}
+
+--
+
+```{r, eval=FALSE}
 Vd <- (2*p*q*d)^2
+```
+
+---
+
+# Additive and dominance variance
+
+$G = A + D$
+
+```{r, eval=FALSE}
 Vg <- Va + Vd
 ```
 
-```{r}
+--
+
+### $H^2$ and $h^2$ due to this SNP marker
+
+```{r, eval=FALSE}
 h2 <- Va/Vp
 H2 <- Vg/Vp
 ```
+
 
 
