@@ -74,11 +74,12 @@ Then, simulate an F2 population with 200 individuals and 100 SNP markers.
 ```{r, eval=FALSE}
 pgeno <- t(f[, c("plant1", "plant18")])
 pgeno <- apply(pgeno, 2, as.numeric)
+set.seed(125765)
 f2 <- simuPoisson(pgeno, f$chr, f$cM, 200)
 
 f2 <- as.data.frame(f2)
 names(f2) <- paste0(f$chr, "_", f$pos)
-write.table(f2, "data/f2_geno.csv", sep=",", quote=FALSE)
+write.table(f2, "data/f2_geno_temp.csv", sep=",", quote=FALSE)
 ```
 
 ---
