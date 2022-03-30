@@ -36,3 +36,5 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+0.test/
