@@ -82,7 +82,7 @@ h2 = vprogeny/(vprogeny + Vp)
 
 
 
-```{r}
+```{r, eval=FALSE}
 cc <- read.csv("data/ppj220030-sup-0002-tables1.csv")
 table(cc$date)
 
