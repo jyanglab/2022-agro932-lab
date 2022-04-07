@@ -40,12 +40,12 @@ names(geno) <- c("chr", "pos", "ref", "alt", paste0("plant", 1:20))
 
 ```{r, eval=FALSE}
 ### Just sample 100 markers from this Mt chr
-set.seed(12579)
+set.seed(125789)
 markers <- sample(1:nrow(geno), size=100)
-f <- geno[sort(markers), c("chr", "pos", "ref", "alt", "plant1", "plant18")]
+f <- geno[sort(markers), c("chr", "pos", "ref", "alt", "plant2", "plant13")]
 # select just one haplotype
-f$plant1 <- gsub("/.*", "", f$plant1)
-f$plant18 <- gsub("/.*", "", f$plant18)
+f$plant2 <- gsub("/.*", "", f$plant2)
+f$plant13 <- gsub("/.*", "", f$plant13)
 # recoding to use -1,0,1
 f[f==0] <- -1
 # simulate the recombination rate
@@ -61,9 +61,9 @@ f$cM <- f$pos/5000
 -  `plant1` and `plant18` were selfed five generations to be pure inbreds.
 
 ```{r, eval=FALSE}
-install.packages("devtools")
+#install.packages("devtools")
 library(devtools)
-install_github("lian0090/simuPoisson")
+#install_github("lian0090/simuPoisson")
 library(simuPoisson)
 ```
 
@@ -72,7 +72,7 @@ library(simuPoisson)
 Then, simulate an F2 population with 200 individuals and 100 SNP markers.
 
 ```{r, eval=FALSE}
-pgeno <- t(f[, c("plant1", "plant18")])
+pgeno <- t(f[, c("plant2", "plant13")])
 pgeno <- apply(pgeno, 2, as.numeric)
 set.seed(125765)
 f2 <- simuPoisson(pgeno, f$chr, f$cM, 200)
@@ -173,17 +173,17 @@ $P = G + E$
 $G = A + D$
 
 
-Let's find out $a$ and $d$ at a specific Marker `Mt_24242`:
+Let's find out $a$ and $d$ at a specific Marker `Mt_29145`:
 
 --
 
 ```{r, eval=FALSE}
 library(ggplot2)
-ggplot(gp, aes(x=as.factor(Mt_24242), y=height, color=as.factor(Mt_24242))) +
+ggplot(gp, aes(x=as.factor(Mt_29145), y=height, color=as.factor(Mt_29145))) +
     geom_boxplot() +
     geom_jitter(color="black", size=1, alpha=0.9) +
     scale_color_manual(values=c("#E69F00", "#56B4E9", "#fe6f5e"))+
-    labs(title="Mt_24242", y="Plant Height", x = "Genotype")+
+    labs(title="Mt_29145", y="Plant Height", x = "Genotype")+
     theme_classic() +
     guides(color=FALSE) +
     theme(plot.title = element_text(size=20, face = "bold"), 
