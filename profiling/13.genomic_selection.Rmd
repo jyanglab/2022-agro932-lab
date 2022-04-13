@@ -1,0 +1,340 @@
+---
+title: "Genomic Selection"
+author: "Jinliang Yang"
+date: "04-14-2022"
+output: pdf_document
+---
+
+## Path Normalization
+
+````{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('..//')) 
+#library(tidyverse)
+```
+
+--------------------------------
+
+# A real world example: Loblolly pine data
+
+In this example, we will use the breeding values of crown width across the planting beds at age 6 (CWAC6). 
+
+```{r}
+# read phenotype and SNP files
+pheno_file <- "data/DATA_nassau_age6_CWAC.csv"
+geno_file <- "data/Snp_Data.csv"
+
+pheno <- read.csv(pheno_file, header=TRUE, stringsAsFactors = FALSE)
+hist(pheno$Derregressed_BV, main="Crown width at Age 6", xlab="width")
+# geno[1:10, 1:10]
+```
+
+
+# Loblolly pine data
+
+
+### Remove missing phenotypes 
+
+There are some accessions containing no phenotype. We need to remove these accessions first.
+
+```{r, eval=T}
+na.index <-  which(is.na(pheno$Derregressed_BV))
+# length(na.index)
+pheno <- pheno[-na.index, ]
+
+# phenotypes 
+y <- pheno$Derregressed_BV
+y <- matrix(y, ncol=1)
+```
+
+
+
+# Genotype data: SNP quality control
+
+In the `geno` matrix, row indicates individual, column indicates SNPs.
+
+### Missingness and MAF
+
+```{r, eval=T, echo=TRUE}
+geno <- read.csv(geno_file, header=TRUE, stringsAsFactors = FALSE)
+dim(geno)
+
+# Keep genotypes for these remaining lines
+geno <- geno[geno$Genotype %in% pheno$Genotype, ]
+# markers 
+geno <- geno[,-1] # 861 x 4853
+geno[geno == -9] <- NA
+
+# missing rate
+missing <- apply(geno, 2, function(x){sum(is.na(x))/length(x)})
+# minor allele frequency
+maf <- apply(geno, 2, function(x){
+  frq <- mean(x, na.rm=TRUE)/2 # 1 allele
+  return(ifelse(frq > 0.5, 1-frq, frq))
+})
+```
+
+
+# Genotype data: SNP quality control
+
+In the `geno` matrix, row indicates individual, column indicates SNPs.
+
+
+#### Plot the results
+```{r, eval=T, echo=TRUE}
+hist(missing, breaks=100, col="blue", xlab="SNP Missing rate")
+hist(maf, breaks=100, col="blue", xlab="Minor Allele Freq")
+```
+
+
+
+Removing SNPs with high missing rate (missingness > 0.2) and low MAF (MAF < 0.05)
+
+- Question: How many markers are removed?
+
+```{r, eval=T, echo=TRUE}
+idx1 <- which(missing > 0.2) #154
+idx2 <- which(maf < 0.05) #1647
+idx <- unique(c(idx1, idx2)) #1784
+
+geno2 <- geno[, -idx]
+dim(geno2)
+```
+
+
+
+### Missing marker imputation
+
+Replace missing marker genotypes with __mean values__. Then store the marker genotypes in a matrix object `Z`. 
+
+```{r, eval=T, echo=TRUE}
+Z <- matrix(0, ncol=ncol(geno2), nrow=nrow(geno2))
+for (j in 1:ncol(geno2)){
+  #cat("j = ", j, '\n')
+  Z[,j] <- ifelse(is.na(geno2[,j]), mean(geno2[,j], na.rm=TRUE), geno2[,j])
+}
+# sum(is.na(Z))
+write.table(Z, "data/Z.txt", sep="\t", row.names = FALSE, 
+            col.names=FALSE, quote=FALSE)
+```
+
+
+# Genomic relationship
+
+### SNP Matrix standardization
+
+Standardize the genotype matrix to have a mean of zero and variance of one. Save this matrix as `Zs`. 
+
+```{r, eval=T, echo=TRUE}
+Zs <- scale(Z, center = TRUE, scale = TRUE)
+# dimensions 
+n <- nrow(Zs)
+m <- ncol(Zs)
+```
+
+
+### Calcualte genomic relationship
+
+- Compute the second genomic relationship matrix of [VanRaden (2008)](https://www.ncbi.nlm.nih.gov/pubmed/18946147) using the entire markers. 
+- Then add a very small positive constant (e.g., 0.001) to the diagonal elements so that `G` matrix is invertible. 
+
+```{r, eval=T, echo=TRUE}
+# Given matrices x and y as arguments, return a matrix cross-product. 
+# This is formally equivalent to (but usually slightly faster than) 
+# the call t(x) %*% y (crossprod) or x %*% t(y) (tcrossprod).
+G <- tcrossprod(Zs) / ncol(Zs)
+# G <- Zs %*% t(Zs) /ncol(Zs)
+G <- G + diag(n)*0.001
+```
+
+
+# Solve MME for GBLUP
+
+Set up mixed model equations (MME) by fitting the model:
+
+  $$\mathbf{y = 1\mu + Zu + e}$$
+  
+- where $\mu$ is the intercept, 
+- $\mathbf{Z}$ is the incident matrix of individuals, 
+- $\mathbf{u}$ is the breeding value of the individuals, 
+- and $\mathbf{e}$ is the residual. 
+
+Directly take the inverse of LHS to obtain the solutions for GBLUP. Report the estimates of intercept and additive genetic values. Use $\lambda = 1.35$. 
+
+```{r, eval=T, echo=TRUE}
+lambda <- 1.35 # fit$Ve / fit$Vm
+Ginv <- solve(G)
+ones <- matrix(1, ncol=1, nrow=n)
+Z <- diag(n)
+# Given matrices x and y as arguments, return a matrix cross-product. 
+#This is formally equivalent to (but usually slightly faster than) 
+#the call t(x) %*% y (crossprod) or x %*% t(y) (tcrossprod).
+LHS1 <- cbind(crossprod(ones), crossprod(ones, Z)) 
+LHS2 <- cbind(crossprod(Z, ones), crossprod(Z) +  Ginv*lambda)
+LHS <- rbind(LHS1, LHS2)
+RHS <- rbind( crossprod(ones, y), crossprod(Z,y) )
+sol <- solve(LHS, RHS)
+head(sol)
+tail(sol)
+```
+
+---
+
+# R package: `rrBLUP`
+
+Fit GBLUP by using the `mixed.solve` function in the [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/index.html) R package. 
+
+- Report the estimates of intercept and additive genetic values. 
+- Do they agree with previous estimates? 
+- Also, report the estimated genomic heritability and the ratio of variance components $\lambda = \frac{V_e}{V_A}$. 
+
+```{r, eval=T, echo=TRUE}
+#install.packages("rrBLUP")
+library(rrBLUP)
+fit <- mixed.solve(y = y, K=G)
+# additive genetic variance
+fit$Vu
+# residual variance
+fit$Ve
+# intercept 
+fit$beta
+# additive genetic values
+head(fit$u)
+tail(fit$u)
+# genomic h2
+fit$Vu / (fit$Vu + fit$Ve)
+# ratio of variance components 
+fit$Ve / fit$Vu
+# plot(x=sol[-1], y=fit$u)
+```
+
+---
+
+# RR-BLUP
+
+Set up mixed model equations (MME) by fitting the model $\mathbf{y = 1b + Zm + e}$, where $\mathbf{b}$ is the intercept, $\mathbf{Z}$ is the standardized marker genotypes (`Zs`), $\mathbf{m}$ is the additive marker genetic effects, and $\mathbf{e}$ is the residual. 
+
+\begin{align*}
+  \begin{bmatrix}
+    \mathbf{\hat{b}} \\
+    \mathbf{\hat{m}} \\
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \mathbf{X^{'}R^{-1}X} & \mathbf{X^{'}R^{-1}Z} \\
+    \mathbf{Z^{'}R^{-1}X} & \mathbf{Z^{'}R^{-1}Z} + \mathbf{I} V_e/V_{M_i} \\
+  \end{bmatrix}^{-1}
+  \begin{bmatrix}
+    \mathbf{X^{'}R^{-1}y} \\
+    \mathbf{Z^{'}R^{-1}y} \\
+  \end{bmatrix}
+\end{align*}
+
+Directly take the inverse of LHS to obtain the solutions for marker-based GBLUP (RR-BLUP). Report the estimates of intercept and marker additive genetic effects. Use $\lambda = 4326.212$. 
+
+--
+
+```{r, eval=T, echo=TRUE}
+lambda <- 4326.212 # fit$Ve / fit$Vu
+ones <- matrix(1, ncol=1, nrow=n)
+I <- diag(m)
+LHS1 <- cbind(crossprod(ones), crossprod(ones, Zs)) 
+LHS2 <- cbind(crossprod(Zs, ones), crossprod(Zs) +  I*lambda)
+LHS <- rbind(LHS1, LHS2)
+RHS <- rbind( crossprod(ones, y), crossprod(Zs,y) )
+sol2 <- solve(LHS, RHS)
+head(sol2)
+tail(sol2)
+```
+
+---
+
+# Use `rrBLUP` package
+
+Fit RR-BLUP by using the `mixed.solve` function in the [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/index.html) R package. 
+
+- Report the estimates of intercept and marker additive genetic effects. 
+- o they agree with the estimates with the manual calculation? 
+- Also, report the ratio of variance components $\lambda = \frac{V_e}{V_A}$. 
+
+```{r, eval=T, echo=TRUE}
+library(rrBLUP)
+fit2 <- mixed.solve(y = y, Z=Zs)
+# marker additive genetic variance
+fit2$Vu
+# residual variance
+fit2$Ve
+# intercept 
+fit2$beta
+# marker additive genetic effects
+head(fit2$u)
+tail(fit2$u)
+# ratio of variance components 
+fit2$Ve / fit2$Vu
+
+# plot(x=sol2[-1], y=fit2$u)
+```
+
+
+# K-fold validation
+
+Repeat GBLUP but treat the first 600 individuals as a training set and predict the additive genetic values of the remaining individuals in the testing set. 
+- What is the predictive correlation in the testing set? Use $\lambda = 1.348411$. 
+
+```{r, eval=T, echo=TRUE}
+n.trn <- 600
+n.tst <- 261
+y.trn <- y[1:n.trn]
+y.tst <- y[n.trn+1:n.tst]
+Zs.trn <- Zs[1:n.trn,]
+Zs.tst <- Zs[n.trn+1:n.tst,]
+
+Gtrn <- tcrossprod(Zs.trn) / ncol(Zs.trn)
+Gtrn <- Gtrn + diag(n.trn)*0.001
+Gtst.trn <- tcrossprod(Zs.tst, Zs.trn) / ncol(Zs.tst)
+#Gtrn <- G[1:n.trn, 1:n.trn]
+#Gtst.trn <- G[n.trn+1:n.tst, 1:n.trn]
+
+lambda <- 1.348411 # fit$Ve / fit$Vu
+Ginv.trn <- solve(Gtrn)
+ones <- matrix(1, ncol=1, nrow=n.trn)
+Z <- diag(n.trn)
+LHS1 <- cbind(crossprod(ones), crossprod(ones, Z)) 
+LHS2 <- cbind(crossprod(Z, ones), crossprod(Z) +  Ginv.trn*lambda)
+LHS <- rbind(LHS1, LHS2)
+RHS <- rbind( crossprod(ones, y.trn), crossprod(Z,y.trn) )
+sol.trn <- solve(LHS, RHS)
+
+# prediction
+y.hat <- Gtst.trn %*% Ginv.trn %*% matrix(sol.trn[c(2:(n.trn+1))])
+cor(y.hat, y[(n.trn+1):n])
+# plot(y.hat, y[(n.trn+1):n])
+```
+
+
+Repeat RR-BLUP but treat the first 600 individuals as a training set and predict the additive genetic values of the remaining individuals in the testing set. 
+- What is the predictive correlation in the testing set? Use $\lambda = 4326.212$. 
+- Also, compare this predictive correlation to the one from GBLUP. 
+
+```{r, eval=T, echo=TRUE}
+Zs.trn <- Zs[1:n.trn, ]
+Zs.tst <- Zs[n.trn+1:n.tst, ]
+lambda <- 4326.212 # fit$Ve / fit$Vu
+ones <- matrix(1, ncol=1, nrow=n.trn)
+I <- diag(m)
+LHS1 <- cbind(crossprod(ones), crossprod(ones, Zs.trn)) 
+LHS2 <- cbind(crossprod(Zs.trn, ones), crossprod(Zs.trn) +  I*lambda)
+LHS <- rbind(LHS1, LHS2)
+RHS <- rbind( crossprod(ones, y.trn), crossprod(Zs.trn, y.trn) )
+sol.trn <- solve(LHS, RHS)
+
+# prediction
+y.hat2 <- Zs.tst %*% matrix(sol.trn[-1])
+# cor(y.hat2, y[(n.trn+1):n])
+# plot(y.hat2, y[(n.trn+1):n])
+```
+
+
+
+
+
