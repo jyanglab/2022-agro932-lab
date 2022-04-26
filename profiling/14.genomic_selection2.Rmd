@@ -276,7 +276,7 @@ mixed.solve(y, Z=NULL, K=NULL, X=NULL, method="REML",
 
 - __K__: Covariance matrix ( $m \times m$) for random effects; must be positive semi-definite. If not passed, assumed to be the identity matrix.
 
-- __X__: Design matrix ( $n \times p$ ) for the fixed effects. If not passed, a vector of 1's is used to model the intercept. X must be full column rank (implies β is estimable).
+- __X__: Design matrix ( $n \times p$ ) for the fixed effects. If not passed, a vector of 1's is used to model the intercept. X must be full column rank (implies $\beta$ is estimable).
 
 ---
 
@@ -460,9 +460,6 @@ for(i in 1:5){
 ### Step3: repeat it n times
 
 ```{r, eval=FALSE, echo=TRUE}
-library(modelr)
-library(rrBLUP)
-
 kfold_cv <- function(y=y, Zs=Zs, k=5, nrep=10){
   res <- data.frame()
   for(n in 1:nrep){
@@ -470,17 +467,13 @@ kfold_cv <- function(y=y, Zs=Zs, k=5, nrep=10){
     cv  <- crossv_kfold(data.frame(idx=1:length(y), y=y), k = k)
     res2 <- data.frame()
     for(i in 1:5){
-      ### training
       tr_idx <- cv$train[[i]]$idx
       test_idx <- cv$test[[i]]$idx
       fit <- mixed.solve(y = y[tr_idx,], Z=Zs[tr_idx,], K=NULL, SE=FALSE, return.Hinv=FALSE)
       u <- as.matrix(fit$u)
-      ### validation
       pred <- Zs[test_idx, ] %*% u
       out <- c(pred[,1]) + c(fit$beta)
-      ### accuracy
       acc <- cor(y[test_idx,], out, use="complete")
-      ### output results
       temp <- data.frame(rep=n, cv=i, r=acc)
       res2 <- rbind(res2, temp)
     }
