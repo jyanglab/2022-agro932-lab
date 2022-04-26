@@ -150,7 +150,14 @@ __.ped__: Contains no header line, and one line per sample with 6+2V fields wher
 
 # Genotypic data manipulation
 
+1. ssh to your HCC account: `ssh USERID@crane.unl.edu`
+2. cd to your agro932-lab repo: `cd PATH/courses/2022-agro932-lab`
+3. Fetch upstream from the GitHub. (git clone a new copy in a diff path)
+4. git pull to sync it: `git pull`
+5. request a quick computing node `srun --qos=short --nodes=1 --licenses=common --ntasks=4 --mem 32G --time 6:00:00 --pty bash`
+
 ```{bash, eval=FALSE}
+mkdir largedata
 cp -r data/RiceDiversity_44K_Genotypes_PLINK largedata/
 
 module load plink/1.90
@@ -170,9 +177,22 @@ plink --file sativas413 --make-bed --out binary_sativas413
 plink -bfile binary_sativas413 --freq --missing --out sativas413
 
 # copy results back to cache folder!
+cd ../../
 cp largedata/RiceDiversity_44K_Genotypes_PLINK/sativas413.frq cache/
 cp largedata/RiceDiversity_44K_Genotypes_PLINK/sativas413.lmiss cache/
 ```
+
+### Remote cluster
+
+```{bash, eval=FALSE}
+git add --all
+git commit -m "GWAS frq and missingness"
+git push
+```
+
+### local computer
+
+`git pull`
 
 ---
 
@@ -209,6 +229,7 @@ dev.off()
 - By default, when a limited window report is requested, every pair of variants with at least (10-1) variants between them, or more than 1000 kilobases apart, is ignored. You can change the first threshold with `--ld-window`, and the second threshold with `--ld-window-kb`.
 
 ```{bash, eval=FALSE}
+cd largedata/RiceDiversity_44K_Genotypes_PLINK/
 plink -bfile binary_sativas413 --r2 --ld-window 100 --ld-window-kb 100 --ld-window-r2 0 --out binary_sativas413 
 ```
 
