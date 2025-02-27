@@ -1,0 +1,110 @@
+---
+title: "1.assignment"
+author: "Waqar Ali"
+date: "2025-02-11"
+output:
+bibliography: /work/schnablelab/waqarali/2022-agro932-lab/homework1/references.bib
+---
+
+# **Assignment-1**
+
+## **Data Download and Methods Described for the Selection Scan**
+
+The plant species I am working on for this assignment is **maize (*Zea mays*)**. I am using the data published in the **European Variation Archive (EVA)** under project number **PRJEB41335**, which provides selection scan data for maize and teosinte.
+
+Maize is the most widely cultivated cereal worldwide, with a genome size of **~2.3 Gb**. It was domesticated from its wild ancestor, **teosinte (*Zea mays ssp. parviglumis*)**, approximately 9000 years ago.
+
+I have downloaded **10 samples of the wild population (teosinte)** and **10 samples of domesticated maize**, extracted from the **EVA dataset PRJEB41335**, and saved them as VCF files.
+
+---
+
+## **Setup Directories for Data Storage**
+All datasets have been downloaded and organized under the following directory on **HCC**:
+
+```
+/work/schnablelab/waqarali/2022-agro932-lab/homework1/
+```
+
+---
+
+## **R Setup**
+```{r setup}
+# Set working directory for reproducibility
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('/work/schnablelab/waqarali/2022-agro932-lab/homework1')) 
+```
+
+---
+
+## **Downloading VCF Data**
+```{bash, eval=FALSE}
+# Set directory for wild (teosinte) and maize samples
+cd /work/schnablelab/waqarali/2022-agro932-lab/homework1/
+
+# Download 10 wild (teosinte) samples
+wget /work/schnablelab/waqarali/2022-agro932-lab/homework1/teosinte_only.vcf.gz
+
+# Download 10 domesticated (maize) samples
+wget /work/schnablelab/waqarali/2022-agro932-lab/homework1/maize_only.vcf.gz
+```
+
+---
+
+## **Downloading Reference Genome and Gene Annotation Files**
+```{bash, eval=FALSE}
+# Set directory for reference genome
+cd /work/schnablelab/waqarali/2022-agro932-lab/homework1/
+
+# Download B73 Reference Genome (v3)
+wget /work/schnablelab/waqarali/2022-agro932-lab/homework1/B73_RefGen_v3.fa.gz
+
+# Download Gene Annotation File (AGPv3.21 GFF3)
+wget /work/schnablelab/waqarali/2022-agro932-lab/homework1/Zea_mays.AGPv3.21.gff3.gz
+```
+
+---
+
+## **Selection Scan Methods Used in the Publication**
+
+For the selection scan, XP-CLR software was used to calculate the XP-CLR score between the sub-groups with non-overlapping windows of **10 Kb**. SNPs were filtered with:
+- **Missing rate filter**: <0.5
+- **Minimum depth**: 2
+- **Minimum genotype quality**: 5
+
+Additional population genetic studies were conducted, including:
+- **Nucleotide diversity (π)**
+- **Tajima’s D using VCFtools**
+- **S. propinquum used as the ancestor**
+
+---
+
+## **References**
+```bibtex
+@article{xu2022population,
+  title={Population genomics of Zea species identifies selection signatures during maize domestication and adaptation},
+  author={Xu, Jing and Wang, Qiang and Zheng, Zhifu and Zhang, Li and Wang, Xin and Hufford, Matthew B and Ross-Ibarra, Jeffrey and Jiao, Yao-Guang},
+  journal={BMC Plant Biology},
+  volume={22},
+  number={1},
+  pages={1--17},
+  year={2022},
+  publisher={Springer}
+}
+
+@misc{eva-prjeb41335,
+  title={European Variation Archive - PRJEB41335},
+  author={{European Variation Archive}},
+  year={2021},
+  url={https://www.ebi.ac.uk/eva/?eva-study=PRJEB41335},
+  note={Accessed: 2025-02-11}
+}
+
+@misc{maizegdb-B73v3,
+  title={MaizeGDB - B73 Reference Genome v3},
+  author={{Maize Genetics and Genomics Database}},
+  year={2025},
+  url={https://download.maizegdb.org/B73_RefGen_v3/},
+  note={Accessed: 2025-02-11}
+}
+```
+
